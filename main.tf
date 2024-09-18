@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   required_providers {
     aws = {
@@ -13,8 +16,10 @@ terraform {
 }
 
 provider "aws" {
-  region = "eu-north-1"
+  region = "us-west-2"
 }
+
+resource "random_pet" "sg" {}
 
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -29,13 +34,14 @@ data "aws_ami" "ubuntu" {
     values = ["hvm"]
   }
 
-  owners = ["099720109477"]
+  owners = ["099720109477"] # Canonical
 }
 
 resource "aws_instance" "web" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = "t3.micro"
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.web-sg.id]
+
   user_data = <<-EOF
               #!/bin/bash
               apt-get update
@@ -44,9 +50,6 @@ resource "aws_instance" "web" {
               echo "Hello World" > /var/www/html/index.html
               systemctl restart apache2
               EOF
-  tags = {
-    Name = "HelloWorld"
-  }
 }
 
 resource "aws_security_group" "web-sg" {
